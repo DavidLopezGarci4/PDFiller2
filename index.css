@@ -463,7 +463,8 @@ body:not(.edit-mode-active) .draggable-stamp {
 .corrector-patch {
     position: absolute;
     background-color: white; /* Cubre lo de abajo */
-    border: 1.5px dashed #cbd5e1;
+    border: none;
+    outline: none;
     z-index: 8; /* Por debajo de campos editables (10) pero encima de canvas y patches estáticos (5) */
     cursor: move;
     touch-action: none !important; /* Prevenir scroll nativo en móviles */

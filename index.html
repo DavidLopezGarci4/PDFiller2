@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome para iconos limpios -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos Premium Personalizados -->
@@ -25,6 +25,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <!-- pdf-lib para guardar y compilar cambios en cliente -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
     <!-- interact.js para drag-and-drop robusto en móviles -->
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 </head>
@@ -214,7 +215,14 @@
                                     <span class="settings-label" style="font-size: 11px; color: var(--text-secondary); min-width: 60px;">Tipo Letra:</span>
                                     <div class="select-wrapper" style="flex: 1; position: relative;">
                                         <select id="text-font-select" class="premium-select" style="padding: 6px 12px; font-size: 11px; border-radius: 8px;">
-                                            <option value="Inter, sans-serif" selected>Inter / Helvetica</option>
+                                            <option value="Calibri" style="font-family: Calibri, sans-serif;">Calibri</option>
+                                            <option value="Verdana" style="font-family: Verdana, sans-serif;">Verdana</option>
+                                            <option value="Arial" style="font-family: Arial, sans-serif;">Arial</option>
+                                            <option value="Helvetica" style="font-family: Helvetica, Arial, sans-serif;">Helvetica</option>
+                                            <option value="Times New Roman" style="font-family: 'Times New Roman', serif;">Times New Roman</option>
+                                            <option value="Courier New" style="font-family: 'Courier New', monospace;">Courier New</option>
+                                            <option value="Quicksand" style="font-family: 'Quicksand', sans-serif;">Quicksand</option>
+                                            <option value="Inter" style="font-family: 'Inter', sans-serif;" selected>Inter</option>
                                         </select>
                                     </div>
                                 </div>

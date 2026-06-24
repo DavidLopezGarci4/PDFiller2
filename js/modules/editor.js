@@ -307,17 +307,27 @@ window.editorModule = (() => {
             }
             
             // Mapear fuentes estándar de PDF.js a fuentes web estándar
-            const fontNameLower = field.fontName.toLowerCase();
+            const fontNameLower = field.fontName ? field.fontName.toLowerCase() : '';
             if (fontNameLower.includes('bold')) {
                 input.style.fontWeight = 'bold';
             } else {
                 input.style.fontWeight = 'normal';
             }
             
-            if (fontNameLower.includes('times') || fontNameLower.includes('serif')) {
+            if (fontNameLower.includes('calibri')) {
+                input.style.fontFamily = 'Calibri, sans-serif';
+            } else if (fontNameLower.includes('verdana')) {
+                input.style.fontFamily = 'Verdana, sans-serif';
+            } else if (fontNameLower.includes('arial')) {
+                input.style.fontFamily = 'Arial, sans-serif';
+            } else if (fontNameLower.includes('times') || fontNameLower.includes('serif') || fontNameLower.includes('georgia')) {
                 input.style.fontFamily = 'Georgia, "Times New Roman", serif';
             } else if (fontNameLower.includes('courier') || fontNameLower.includes('mono')) {
                 input.style.fontFamily = '"Courier New", Courier, monospace';
+            } else if (fontNameLower.includes('quicksand')) {
+                input.style.fontFamily = 'Quicksand, sans-serif';
+            } else if (fontNameLower.includes('inter')) {
+                input.style.fontFamily = 'Inter, sans-serif';
             } else {
                 input.style.fontFamily = 'Inter, Helvetica, Arial, sans-serif';
             }
@@ -871,11 +881,14 @@ window.editorModule = (() => {
             if (fontSelect) {
                 const val = fontSelect.value;
                 input.style.fontFamily = val;
-                if (val.includes('Georgia')) {
+                if (val.includes('Georgia') || val === 'Times New Roman') {
                     field.fontName = 'Times-Roman';
                     input.style.fontWeight = 'normal';
-                } else if (val.includes('Courier')) {
+                } else if (val.includes('Courier') || val === 'Courier New') {
                     field.fontName = 'Courier';
+                    input.style.fontWeight = 'normal';
+                } else if (val === 'Calibri' || val === 'Verdana' || val === 'Arial' || val === 'Helvetica' || val === 'Quicksand' || val === 'Inter') {
+                    field.fontName = val;
                     input.style.fontWeight = 'normal';
                 } else {
                     field.fontName = 'Helvetica';

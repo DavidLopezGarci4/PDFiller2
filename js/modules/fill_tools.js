@@ -171,7 +171,48 @@ window.fillToolsModule = (() => {
         const y = (e.clientY - rect.top) / zoom;
 
         if (activeTool === 'text') {
-            createTextStamp(x, y);
+            detectFontAtCoordinates(window.pdfPageNum || 1, x, y).then(detected => {
+                let customStyles = null;
+                if (detected) {
+                    const supportedFont = mapFontToSupported(detected.fontName);
+                    const sizeClamped = Math.max(8, Math.min(40, detected.fontSize));
+                    
+                    customStyles = {
+                        fontSize: sizeClamped
+                    };
+                    
+                    if (supportedFont) {
+                        customStyles.fontFamily = supportedFont;
+                        const fontSelect = document.getElementById('text-font-select');
+                        if (fontSelect) {
+                            fontSelect.value = supportedFont;
+                        }
+                    }
+                    
+                    const sizeSelect = document.getElementById('text-size-select');
+                    if (sizeSelect) {
+                        let hasOption = false;
+                        for (let i = 0; i < sizeSelect.options.length; i++) {
+                            if (parseInt(sizeSelect.options[i].value) === sizeClamped) {
+                                hasOption = true;
+                                break;
+                            }
+                        }
+                        if (!hasOption) {
+                            const opt = document.createElement('option');
+                            opt.value = sizeClamped;
+                            opt.textContent = `${sizeClamped} px`;
+                            sizeSelect.appendChild(opt);
+                        }
+                        sizeSelect.value = sizeClamped.toString();
+                    }
+                    
+                    if (window.showNotificationToast) {
+                        window.showNotificationToast(`Cuentagotas: ${detected.fontName} (${detected.fontSize}px)`);
+                    }
+                }
+                createTextStamp(x, y, customStyles);
+            });
         } else if (activeTool === 'corrector') {
             // LECTURA DE PÍXEL INTELIGENTE (CUENTAGOTAS EN CANVAS)
             const canvas = document.getElementById('pdf-canvas');
@@ -259,7 +300,7 @@ window.fillToolsModule = (() => {
     };
 
     // --- 1. ESTAMPAR NUEVO TEXTO LIBRE ---
-    const createTextStamp = (x, y) => {
+    const createTextStamp = (x, y, customStyles = null) => {
         console.log(`Estampando texto libre en: ${x}, ${y}`);
         
         const fontSelect = document.getElementById('text-font-select');
@@ -268,10 +309,19 @@ window.fillToolsModule = (() => {
         const bgSelect = document.getElementById('text-bg-select');
 
         // Extraer valores seleccionados
-        const selFont = fontSelect ? fontSelect.value : 'Inter, Helvetica, Arial, sans-serif';
-        const selSize = sizeSelect ? sizeSelect.value : 'auto';
-        const selColor = colorSelect ? colorSelect.value : 'auto';
-        const selBg = bgSelect ? bgSelect.value : 'auto';
+        let selFont = fontSelect ? fontSelect.value : 'Inter';
+        let selSize = sizeSelect ? sizeSelect.value : 'auto';
+        let selColor = colorSelect ? colorSelect.value : 'auto';
+        let selBg = bgSelect ? bgSelect.value : 'auto';
+
+        if (customStyles) {
+            if (customStyles.fontFamily) {
+                selFont = customStyles.fontFamily;
+            }
+            if (customStyles.fontSize) {
+                selSize = customStyles.fontSize.toString();
+            }
+        }
 
         // Lógica de auto-detección según la posición vertical Y
         const overlayHeight = overlay.clientHeight || 1000;
@@ -301,9 +351,11 @@ window.fillToolsModule = (() => {
         }
 
         // Determinar nombre del font interno
-        if (selFont.includes('Courier')) {
+        if (selFont === 'Calibri' || selFont === 'Verdana' || selFont === 'Arial' || selFont === 'Helvetica' || selFont === 'Times New Roman' || selFont === 'Courier New' || selFont === 'Quicksand' || selFont === 'Inter') {
+            finalFontName = selFont;
+        } else if (selFont.includes('Courier')) {
             finalFontName = 'Courier';
-        } else if (selFont.includes('Georgia')) {
+        } else if (selFont.includes('Georgia') || selFont.includes('Times')) {
             finalFontName = 'Times-Roman';
         } else {
             finalFontName = yPercent < 22 ? 'Helvetica-Bold' : 'Helvetica';
@@ -1273,6 +1325,94 @@ window.fillToolsModule = (() => {
         return false;
     };
 
+    // --- DETECCIÓN DE FUENTES CUENTAGOTAS ---
+    const detectFontAtCoordinates = async (pageNum, clickX, clickY) => {
+        if (!window.pdfInstance) return null;
+        try {
+            const page = await window.pdfInstance.getPage(pageNum);
+            const originalViewport = page.getViewport({ scale: 1.0 });
+            const pageHeight = originalViewport.height;
+            
+            // clickX and clickY are screen/overlay coordinates scaled by window.pdfScale
+            const x_pdf = clickX / window.pdfScale;
+            const y_pdf = pageHeight - (clickY / window.pdfScale);
+            
+            const textContent = await page.getTextContent();
+            
+            let closestItem = null;
+            let minDistance = Infinity;
+            
+            for (const item of textContent.items) {
+                if (!item.str || item.str.trim() === '') continue;
+                
+                const x1 = item.transform[4];
+                const y1 = item.transform[5];
+                const fontSize = Math.abs(item.transform[3]);
+                const fontHeight = item.height || fontSize;
+                const x2 = x1 + item.width;
+                const y2 = y1 + fontHeight;
+                
+                // Bounding box expandida para capturar el click cómodamente
+                const pad = 15;
+                const inX = (x_pdf >= x1 - pad) && (x_pdf <= x2 + pad);
+                const inY = (y_pdf >= y1 - pad) && (y_pdf <= y2 + pad);
+                
+                if (inX && inY) {
+                    const centerX = (x1 + x2) / 2;
+                    const dist = Math.sqrt(Math.pow(x_pdf - centerX, 2) + Math.pow(y_pdf - y1, 2));
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestItem = item;
+                    }
+                }
+            }
+            
+            if (closestItem) {
+                let rawFontName = closestItem.fontName;
+                let fontObjName = '';
+                const fontObj = page.commonObjs.get(rawFontName);
+                if (fontObj && fontObj.name) {
+                    fontObjName = fontObj.name;
+                } else {
+                    fontObjName = rawFontName;
+                }
+                
+                // Limpiar prefijo y estilos de subfuente
+                let clean = fontObjName.split('+').pop();
+                clean = clean.split(',')[0];
+                clean = clean.split('-')[0];
+                clean = clean.replace(/-/g, ' ');
+                clean = clean.trim();
+                clean = clean.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                
+                const fontSize = Math.round(Math.abs(closestItem.transform[3]));
+                
+                return {
+                    fontName: clean,
+                    fontSize: fontSize,
+                    textSnippet: closestItem.str
+                };
+            }
+        } catch (err) {
+            console.error('Error al detectar tipografía en coordenadas:', err);
+        }
+        return null;
+    };
+
+    const mapFontToSupported = (name) => {
+        if (!name) return null;
+        const n = name.toLowerCase();
+        if (n.includes('calibri')) return 'Calibri';
+        if (n.includes('verdana')) return 'Verdana';
+        if (n.includes('arial')) return 'Arial';
+        if (n.includes('helvetica') || n.includes('sans')) return 'Helvetica';
+        if (n.includes('times') || n.includes('roman') || n.includes('serif') || n.includes('georgia')) return 'Times New Roman';
+        if (n.includes('courier') || n.includes('mono') || n.includes('consolas')) return 'Courier New';
+        if (n.includes('quicksand')) return 'Quicksand';
+        if (n.includes('inter')) return 'Inter';
+        return null;
+    };
+
     // ESCANEAR CAMPOS DEL PDF Y EXTRAER FORMATOS EXISTENTES DE LETRA Y FONDO
     const populateTextSettingsFromFields = () => {
         if (!window.pdfFields || window.pdfFields.length === 0) return;
@@ -1346,17 +1486,26 @@ window.fillToolsModule = (() => {
         const fontSelect = document.getElementById('text-font-select');
         if (fontSelect) {
             fontSelect.innerHTML = '';
-            const fontItems = Array.from(uniqueFonts).map(item => JSON.parse(item));
-            if (fontItems.length === 0) {
-                fontItems.push({ value: 'Inter, Helvetica, Arial, sans-serif', label: 'Inter / Helvetica' });
-            }
-            fontItems.forEach(font => {
+            const fontsList = [
+                { value: 'Calibri', label: 'Calibri' },
+                { value: 'Verdana', label: 'Verdana' },
+                { value: 'Arial', label: 'Arial' },
+                { value: 'Helvetica', label: 'Helvetica' },
+                { value: 'Times New Roman', label: 'Times New Roman' },
+                { value: 'Courier New', label: 'Courier New' },
+                { value: 'Quicksand', label: 'Quicksand' },
+                { value: 'Inter', label: 'Inter' }
+            ];
+            fontsList.forEach(font => {
                 const opt = document.createElement('option');
                 opt.value = font.value;
                 opt.textContent = font.label;
+                opt.style.fontFamily = font.value === 'Courier New' ? 'monospace' : (font.value === 'Times New Roman' ? 'serif' : 'sans-serif');
                 fontSelect.appendChild(opt);
             });
-            fontSelect.value = modeFont;
+            
+            const mappedModeFont = mapFontToSupported(modeFont) || 'Inter';
+            fontSelect.value = mappedModeFont;
         }
 
         // Poblar Selector de Tamaños

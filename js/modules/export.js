@@ -57,11 +57,79 @@ window.exportModule = (() => {
         try {
             // Cargar los bytes binarios originales del PDF en pdf-lib
             const pdfDoc = await PDFLib.PDFDocument.load(window.pdfBytes);
-            const pages = pdfDoc.getPages();
+            
+            // Registrar fontkit framework
+            pdfDoc.registerFontkit(window.fontkit);
 
             // Fuente estándar para los nuevos textos
-            const helveticaFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-            const helveticaBoldFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const helveticaFont = await pdfDoc.embedStandardFont(PDFLib.StandardFonts.Helvetica);
+            const helveticaBoldFont = await pdfDoc.embedStandardFont(PDFLib.StandardFonts.HelveticaBold);
+            const timesRomanFont = await pdfDoc.embedStandardFont(PDFLib.StandardFonts.TimesRoman);
+            const courierFont = await pdfDoc.embedStandardFont(PDFLib.StandardFonts.Courier);
+
+            // Carga asíncrona de fuentes personalizadas con fallbacks seguros
+            let calibriFont = null;
+            let verdanaFont = null;
+            let quicksandFont = null;
+            let interFont = null;
+
+            // Carlito TTF (for Calibri)
+            try {
+                const fontRes = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/carlito/Carlito-Regular.ttf');
+                if (fontRes.ok) {
+                    const calBytes = await fontRes.arrayBuffer();
+                    calibriFont = await pdfDoc.embedFont(calBytes);
+                } else {
+                    throw new Error('Fetch failed');
+                }
+            } catch (e) {
+                console.warn('Fallo al cargar Calibri (carlito), usando Helvetica fallback', e);
+                calibriFont = helveticaFont;
+            }
+
+            // DejaVu Sans TTF (for Verdana)
+            try {
+                const fontRes = await fetch('https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@version_2_37/resources/ttf/DejaVuSans.ttf');
+                if (fontRes.ok) {
+                    const verBytes = await fontRes.arrayBuffer();
+                    verdanaFont = await pdfDoc.embedFont(verBytes);
+                } else {
+                    throw new Error('Fetch failed');
+                }
+            } catch (e) {
+                console.warn('Fallo al cargar Verdana (DejaVuSans), usando Helvetica fallback', e);
+                verdanaFont = helveticaFont;
+            }
+
+            // Quicksand TTF
+            try {
+                const fontRes = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/quicksand/Quicksand-Regular.ttf');
+                if (fontRes.ok) {
+                    const qBytes = await fontRes.arrayBuffer();
+                    quicksandFont = await pdfDoc.embedFont(qBytes);
+                } else {
+                    throw new Error('Fetch failed');
+                }
+            } catch (e) {
+                console.warn('Fallo al cargar Quicksand, usando Helvetica fallback', e);
+                quicksandFont = helveticaFont;
+            }
+
+            // Inter TTF
+            try {
+                const fontRes = await fetch('https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/inter/static/Inter-Regular.ttf');
+                if (fontRes.ok) {
+                    const intBytes = await fontRes.arrayBuffer();
+                    interFont = await pdfDoc.embedFont(intBytes);
+                } else {
+                    throw new Error('Fetch failed');
+                }
+            } catch (e) {
+                console.warn('Fallo al cargar Inter, usando Helvetica fallback', e);
+                interFont = helveticaFont;
+            }
+
+            const pages = pdfDoc.getPages();
 
             // --- 1. APLICAR PARCHES CORRECTOR (WHITEOUT) ---
             const correctorPatches = window.fillToolsModule.getCorrectorPatches();
@@ -178,7 +246,14 @@ window.exportModule = (() => {
 
                     // Determinar fuente en pdf-lib
                     let activeFont = helveticaFont;
-                    if (field.fontName && field.fontName.toLowerCase().includes('bold')) {
+                    if (field.fontName === 'Calibri') activeFont = calibriFont || helveticaFont;
+                    else if (field.fontName === 'Verdana') activeFont = verdanaFont || helveticaFont;
+                    else if (field.fontName === 'Arial' || field.fontName === 'Helvetica') activeFont = helveticaFont;
+                    else if (field.fontName === 'Times New Roman' || field.fontName === 'Times-Roman') activeFont = timesRomanFont || helveticaFont;
+                    else if (field.fontName === 'Courier New' || field.fontName === 'Courier') activeFont = courierFont || helveticaFont;
+                    else if (field.fontName === 'Quicksand') activeFont = quicksandFont || helveticaFont;
+                    else if (field.fontName === 'Inter') activeFont = interFont || helveticaFont;
+                    else if (field.fontName && field.fontName.toLowerCase().includes('bold')) {
                         activeFont = helveticaBoldFont;
                     }
 

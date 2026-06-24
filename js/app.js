@@ -939,7 +939,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function showNotificationToast(message) {
+    window.showNotificationToast = function(message) {
         const toast = document.getElementById('toast-notification');
         const toastMsg = document.getElementById('toast-message');
         if (toast && toastMsg) {
@@ -950,5 +950,5 @@ document.addEventListener('DOMContentLoaded', async () => {
                 toast.classList.remove('active');
             }, 3000); // Ocultar después de 3 segundos
         }
-    }
+    };
 });
