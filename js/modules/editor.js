@@ -25,11 +25,45 @@ window.editorModule = (() => {
         const measuredWidth = Math.max(input.scrollWidth + 12, 40); // Ancho mínimo de seguridad
         const measuredHeight = Math.max(input.scrollHeight + 4, 18);
         
-        field.width = measuredWidth;
-        field.height = measuredHeight;
+        // Limitar dimensiones al tamaño del overlay para evitar desbordamiento del PDF
+        const overlay = document.getElementById('pdf-overlay');
+        const overlayWidth = overlay ? overlay.clientWidth : window.innerWidth;
+        const overlayHeight = overlay ? overlay.clientHeight : window.innerHeight;
         
-        wrapper.style.width = `${measuredWidth}px`;
-        wrapper.style.height = `${measuredHeight}px`;
+        let w = Math.min(measuredWidth, overlayWidth);
+        let h = Math.min(measuredHeight, overlayHeight);
+        
+        // Si al cambiar el tamaño el campo sobresale por la derecha/abajo, desplazar su left/top hacia la izquierda/arriba
+        let x = field.x;
+        let y = field.y;
+        
+        if (x + w > overlayWidth) {
+            x = overlayWidth - w;
+            wrapper.style.left = `${x}px`;
+            field.x = x;
+        }
+        if (x < 0) {
+            x = 0;
+            wrapper.style.left = `${x}px`;
+            field.x = x;
+        }
+        
+        if (y + h > overlayHeight) {
+            y = overlayHeight - h;
+            wrapper.style.top = `${y}px`;
+            field.y = y;
+        }
+        if (y < 0) {
+            y = 0;
+            wrapper.style.top = `${y}px`;
+            field.y = y;
+        }
+        
+        field.width = w;
+        field.height = h;
+        
+        wrapper.style.width = `${w}px`;
+        wrapper.style.height = `${h}px`;
         
         input.style.width = '100%';
         input.style.height = '100%';
@@ -624,6 +658,24 @@ window.editorModule = (() => {
                     x = snapX;
                     y = snapY;
 
+                    // Limitar el movimiento al tamaño del overlay para evitar desbordamiento del PDF
+                    const overlay = document.getElementById('pdf-overlay');
+                    if (overlay) {
+                        const maxW = overlay.clientWidth;
+                        const maxH = overlay.clientHeight;
+                        const w = field.width;
+                        const h = field.height;
+
+                        let targetLeft = field.x + x;
+                        let targetTop = field.y + y;
+
+                        targetLeft = Math.max(0, Math.min(targetLeft, maxW - w));
+                        targetTop = Math.max(0, Math.min(targetTop, maxH - h));
+
+                        x = targetLeft - field.x;
+                        y = targetTop - field.y;
+                    }
+
                     // Desplazar el div
                     wrapper.style.transform = `translate(${x}px, ${y}px)`;
 
@@ -648,12 +700,21 @@ window.editorModule = (() => {
                     if (transform) {
                         const matches = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
                         if (matches) {
-                            const tx = parseFloat(matches[1]);
-                            const ty = parseFloat(matches[2]);
+                            let tx = parseFloat(matches[1]);
+                            let ty = parseFloat(matches[2]);
                             
                             // Guardar coordenadas absolutas definitivas en el modelo original
                             field.x += tx;
                             field.y += ty;
+                            
+                            // Asegurar límites finales absolutos en el end para evitar desbordamiento
+                            const overlay = document.getElementById('pdf-overlay');
+                            if (overlay) {
+                                const maxW = overlay.clientWidth;
+                                const maxH = overlay.clientHeight;
+                                field.x = Math.max(0, Math.min(field.x, maxW - field.width));
+                                field.y = Math.max(0, Math.min(field.y, maxH - field.height));
+                            }
                             
                             // Resetear transformación y aplicar left/top fijos para simplificar lógica posterior
                             wrapper.style.transform = 'none';

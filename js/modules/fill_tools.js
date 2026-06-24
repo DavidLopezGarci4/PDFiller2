@@ -361,14 +361,23 @@ window.fillToolsModule = (() => {
             finalFontName = yPercent < 22 ? 'Helvetica-Bold' : 'Helvetica';
         }
 
+        let posX = x;
+        let posY = y;
+        if (overlay) {
+            const maxW = overlay.clientWidth;
+            const maxH = overlay.clientHeight;
+            posX = Math.max(0, Math.min(posX, maxW - 100));
+            posY = Math.max(0, Math.min(posY, maxH - 22));
+        }
+
         const stampId = `text_stamp_${Date.now()}`;
         
         // Registrar en modelo global
         const stampData = {
             id: stampId,
             text: 'Nuevo Texto...',
-            x: x,
-            y: y,
+            x: posX,
+            y: posY,
             width: 100, // Anchura y altura iniciales
             height: 22,
             fontSize: finalSize,
@@ -456,8 +465,22 @@ window.fillToolsModule = (() => {
                     },
                     move(event) {
                         const zoom = window.viewportZoom || 1.0;
-                        posX += event.dx / zoom;
-                        posY += event.dy / zoom;
+                        let nextX = posX + event.dx / zoom;
+                        let nextY = posY + event.dy / zoom;
+                        
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            const patchW = parseFloat(el.style.width) || patchData.width;
+                            const patchH = parseFloat(el.style.height) || patchData.height;
+                            
+                            nextX = Math.max(0, Math.min(nextX, maxW - patchW));
+                            nextY = Math.max(0, Math.min(nextY, maxH - patchH));
+                        }
+                        
+                        posX = nextX;
+                        posY = nextY;
                         el.style.left = `${posX}px`;
                         el.style.top = `${posY}px`;
                         
@@ -465,6 +488,20 @@ window.fillToolsModule = (() => {
                         patchData.y = posY;
                     },
                     end() {
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            const patchW = parseFloat(el.style.width) || patchData.width;
+                            const patchH = parseFloat(el.style.height) || patchData.height;
+                            posX = Math.max(0, Math.min(posX, maxW - patchW));
+                            posY = Math.max(0, Math.min(posY, maxH - patchH));
+                        }
+                        el.style.left = `${posX}px`;
+                        el.style.top = `${posY}px`;
+                        patchData.x = posX;
+                        patchData.y = posY;
+
                         el.classList.remove('active-focus');
                         if (window.historyManager) window.historyManager.saveState();
                     }
@@ -496,6 +533,33 @@ window.fillToolsModule = (() => {
                         w = event.rect.width / zoom;
                         h = event.rect.height / zoom;
 
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            
+                            if (posX < 0) {
+                                w = w + posX;
+                                posX = 0;
+                            }
+                            if (posY < 0) {
+                                h = h + posY;
+                                posY = 0;
+                            }
+                            
+                            if (posX + w > maxW) {
+                                w = maxW - posX;
+                            }
+                            if (posY + h > maxH) {
+                                h = maxH - posY;
+                            }
+
+                            w = Math.min(w, maxW);
+                            h = Math.min(h, maxH);
+                            w = Math.max(10, w);
+                            h = Math.max(10, h);
+                        }
+
                         el.style.left = `${posX}px`;
                         el.style.top = `${posY}px`;
                         el.style.width = `${w}px`;
@@ -507,6 +571,23 @@ window.fillToolsModule = (() => {
                         patchData.height = h;
                     },
                     end() {
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            posX = Math.max(0, Math.min(posX, maxW - w));
+                            posY = Math.max(0, Math.min(posY, maxH - h));
+                        }
+                        el.style.left = `${posX}px`;
+                        el.style.top = `${posY}px`;
+                        el.style.width = `${w}px`;
+                        el.style.height = `${h}px`;
+
+                        patchData.x = posX;
+                        patchData.y = posY;
+                        patchData.width = w;
+                        patchData.height = h;
+
                         el.classList.remove('active-focus');
                         if (window.historyManager) window.historyManager.saveState();
                     }
@@ -515,11 +596,20 @@ window.fillToolsModule = (() => {
     };
 
     const createCorrectorPatch = (x, y, color) => {
+        let posX = x;
+        let posY = y;
+        if (overlay) {
+            const maxW = overlay.clientWidth;
+            const maxH = overlay.clientHeight;
+            posX = Math.max(0, Math.min(posX, maxW - 80));
+            posY = Math.max(0, Math.min(posY, maxH - 20));
+        }
+
         const patchId = `corrector_patch_${Date.now()}`;
         const patchData = {
             id: patchId,
-            x: x,
-            y: y,
+            x: posX,
+            y: posY,
             width: 80,
             height: 20,
             color: color,
@@ -676,12 +766,32 @@ window.fillToolsModule = (() => {
                 
                 const bounds = detectCheckboxBounds(canvas, cx, cy);
                 if (bounds) {
+                    let bx = bounds.x;
+                    let by = bounds.y;
+                    let bw = bounds.width;
+                    let bh = bounds.height;
+                    
+                    const overlay = document.getElementById('pdf-overlay');
+                    if (overlay) {
+                        const maxW = overlay.clientWidth;
+                        const maxH = overlay.clientHeight;
+                        
+                        bw = Math.min(bw, maxW);
+                        bh = Math.min(bh, maxH);
+                        
+                        if (bx + bw > maxW) bx = maxW - bw;
+                        if (bx < 0) bx = 0;
+                        
+                        if (by + bh > maxH) by = maxH - bh;
+                        if (by < 0) by = 0;
+                    }
+                    
                     cbData = {
                         id: `checkbox_${Date.now()}`,
-                        x: bounds.x,
-                        y: bounds.y,
-                        width: bounds.width,
-                        height: bounds.height,
+                        x: bx,
+                        y: by,
+                        width: bw,
+                        height: bh,
                         symbol: initialSymbol,
                         color: finalColor, // COLOR POR CONTRASTE AUTOMÁTICO
                         pageNum: window.pdfPageNum || 1
@@ -850,14 +960,42 @@ window.fillToolsModule = (() => {
                         },
                         move(event) {
                             const zoom = window.viewportZoom || 1.0;
-                            posX += event.dx / zoom;
-                            posY += event.dy / zoom;
+                            let nextX = posX + event.dx / zoom;
+                            let nextY = posY + event.dy / zoom;
+
+                            const overlay = document.getElementById('pdf-overlay');
+                            if (overlay) {
+                                const maxW = overlay.clientWidth;
+                                const maxH = overlay.clientHeight;
+                                const cbW = parseFloat(el.style.width) || cb.width;
+                                const cbH = parseFloat(el.style.height) || cb.height;
+
+                                nextX = Math.max(0, Math.min(nextX, maxW - cbW));
+                                nextY = Math.max(0, Math.min(nextY, maxH - cbH));
+                            }
+
+                            posX = nextX;
+                            posY = nextY;
                             el.style.left = `${posX}px`;
                             el.style.top = `${posY}px`;
                             cb.x = posX;
                             cb.y = posY;
                         },
                         end() {
+                            const overlay = document.getElementById('pdf-overlay');
+                            if (overlay) {
+                                const maxW = overlay.clientWidth;
+                                const maxH = overlay.clientHeight;
+                                const cbW = parseFloat(el.style.width) || cb.width;
+                                const cbH = parseFloat(el.style.height) || cb.height;
+                                posX = Math.max(0, Math.min(posX, maxW - cbW));
+                                posY = Math.max(0, Math.min(posY, maxH - cbH));
+                            }
+                            el.style.left = `${posX}px`;
+                            el.style.top = `${posY}px`;
+                            cb.x = posX;
+                            cb.y = posY;
+
                             el.classList.remove('active-focus');
                             updateCheckboxContrast(cb, symbolDiv);
                             if (window.historyManager) window.historyManager.saveState();
@@ -889,6 +1027,28 @@ window.fillToolsModule = (() => {
                             w = event.rect.width / zoom;
                             h = event.rect.height / zoom;
  
+                            const overlay = document.getElementById('pdf-overlay');
+                            if (overlay) {
+                                const maxW = overlay.clientWidth;
+                                const maxH = overlay.clientHeight;
+
+                                if (posX < 0) {
+                                    w = w + posX;
+                                    posX = 0;
+                                }
+                                if (posY < 0) {
+                                    h = h + posY;
+                                    posY = 0;
+                                }
+
+                                if (posX + w > maxW) {
+                                    w = maxW - posX;
+                                }
+                                if (posY + h > maxH) {
+                                    h = maxH - posY;
+                                }
+                            }
+ 
                             const size = Math.max(10, Math.min(w, h));
                             
                             el.style.left = `${posX}px`;
@@ -902,6 +1062,21 @@ window.fillToolsModule = (() => {
                             cb.height = size;
                         },
                         end() {
+                            const overlay = document.getElementById('pdf-overlay');
+                            if (overlay) {
+                                const maxW = overlay.clientWidth;
+                                const maxH = overlay.clientHeight;
+                                const size = cb.width;
+                                posX = Math.max(0, Math.min(posX, maxW - size));
+                                posY = Math.max(0, Math.min(posY, maxH - size));
+                            }
+                            el.style.left = `${posX}px`;
+                            el.style.top = `${posY}px`;
+                            el.style.width = `${cb.width}px`;
+                            el.style.height = `${cb.height}px`;
+                            cb.x = posX;
+                            cb.y = posY;
+
                             el.classList.remove('active-focus');
                             updateCheckboxContrast(cb, symbolDiv);
                             if (window.historyManager) window.historyManager.saveState();
@@ -1251,12 +1426,32 @@ window.fillToolsModule = (() => {
             return;
         }
 
+        let bx = x;
+        let by = y;
+        let bw = w;
+        let bh = h;
+        
+        const overlay = document.getElementById('pdf-overlay');
+        if (overlay) {
+            const maxW = overlay.clientWidth;
+            const maxH = overlay.clientHeight;
+            
+            bw = Math.min(bw, maxW);
+            bh = Math.min(bh, maxH);
+            
+            if (bx + bw > maxW) bx = maxW - bw;
+            if (bx < 0) bx = 0;
+            
+            if (by + bh > maxH) by = maxH - bh;
+            if (by < 0) by = 0;
+        }
+
         const cbData = {
             id: `checkbox_${Date.now()}`,
-            x: x,
-            y: y,
-            width: w,
-            height: h,
+            x: bx,
+            y: by,
+            width: bw,
+            height: bh,
             symbol: symbol,
             color: finalColor,
             pageNum: window.pdfPageNum || 1

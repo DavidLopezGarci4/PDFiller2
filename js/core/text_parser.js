@@ -142,11 +142,55 @@ window.parsePdfTextContent = async (page, viewport) => {
         }
     });
 
-    // 3. Formatear y añadir padding a los campos combinados finales
+    // 3. Formatear y añadir padding a los campos combinados finales y asegurar que no desborden del viewport
     const finalFields = mergedFields.map((field, index) => {
         field.id = `field_${index}`;
-        field.width = field.width + 20; // Padding horizontal para edición cómoda
-        field.height = field.height + 6; // Padding vertical
+        
+        // Calcular el nuevo ancho y alto con padding
+        let w = field.width + 20;
+        let h = field.height + 6;
+        
+        // Asegurar que el ancho y alto no superen el viewport
+        w = Math.min(w, viewport.width);
+        h = Math.min(h, viewport.height);
+        
+        // Ajustar x e y si se desbordan del viewport
+        let x = field.x;
+        let y = field.y;
+        
+        if (x + w > viewport.width) {
+            x = viewport.width - w;
+        }
+        if (x < 0) x = 0;
+        
+        if (y + h > viewport.height) {
+            y = viewport.height - h;
+        }
+        if (y < 0) y = 0;
+        
+        field.x = x;
+        field.y = y;
+        field.width = w;
+        field.height = h;
+        
+        // También ajustar startX y startY para que el static-cover-patch coincida y no se desborde
+        let sx = field.startX;
+        let sy = field.startY;
+        let sw = field.width; // Usar el mismo ancho del parche que el campo final para cubrirlo bien
+        let sh = field.height;
+        
+        if (sx + sw > viewport.width) {
+            sx = viewport.width - sw;
+        }
+        if (sx < 0) sx = 0;
+        
+        if (sy + sh > viewport.height) {
+            sy = viewport.height - sh;
+        }
+        if (sy < 0) sy = 0;
+        
+        field.startX = sx;
+        field.startY = sy;
         
         // Limpiar espacios duplicados accidentales durante la fusión
         field.text = field.text.replace(/\s+/g, ' ');

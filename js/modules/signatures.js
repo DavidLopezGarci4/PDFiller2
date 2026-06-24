@@ -546,8 +546,22 @@ window.signaturesModule = (() => {
                     },
                     move(event) {
                         const zoom = window.viewportZoom || 1.0;
-                        posX += event.dx / zoom;
-                        posY += event.dy / zoom;
+                        let nextX = posX + event.dx / zoom;
+                        let nextY = posY + event.dy / zoom;
+                        
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            const sigW = parseFloat(wrapper.style.width) || sigData.width;
+                            const sigH = parseFloat(wrapper.style.height) || sigData.height;
+                            
+                            nextX = Math.max(0, Math.min(nextX, maxW - sigW));
+                            nextY = Math.max(0, Math.min(nextY, maxH - sigH));
+                        }
+                        
+                        posX = nextX;
+                        posY = nextY;
                         wrapper.style.left = `${posX}px`;
                         wrapper.style.top = `${posY}px`;
                         
@@ -555,6 +569,20 @@ window.signaturesModule = (() => {
                         sigData.y = posY;
                     },
                     end() {
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            const sigW = parseFloat(wrapper.style.width) || sigData.width;
+                            const sigH = parseFloat(wrapper.style.height) || sigData.height;
+                            posX = Math.max(0, Math.min(posX, maxW - sigW));
+                            posY = Math.max(0, Math.min(posY, maxH - sigH));
+                        }
+                        wrapper.style.left = `${posX}px`;
+                        wrapper.style.top = `${posY}px`;
+                        sigData.x = posX;
+                        sigData.y = posY;
+
                         wrapper.classList.remove('active-focus');
                         if (window.historyManager) window.historyManager.saveState();
                     }
@@ -579,6 +607,33 @@ window.signaturesModule = (() => {
                         w = event.rect.width / zoom;
                         h = event.rect.height / zoom;
 
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            
+                            if (posX < 0) {
+                                w = w + posX;
+                                posX = 0;
+                            }
+                            if (posY < 0) {
+                                h = h + posY;
+                                posY = 0;
+                            }
+                            
+                            if (posX + w > maxW) {
+                                w = maxW - posX;
+                            }
+                            if (posY + h > maxH) {
+                                h = maxH - posY;
+                            }
+
+                            w = Math.min(w, maxW);
+                            h = Math.min(h, maxH);
+                            w = Math.max(10, w);
+                            h = Math.max(10, h);
+                        }
+
                         wrapper.style.left = `${posX}px`;
                         wrapper.style.top = `${posY}px`;
                         wrapper.style.width = `${w}px`;
@@ -590,6 +645,23 @@ window.signaturesModule = (() => {
                         sigData.height = h;
                     },
                     end() {
+                        const overlay = document.getElementById('pdf-overlay');
+                        if (overlay) {
+                            const maxW = overlay.clientWidth;
+                            const maxH = overlay.clientHeight;
+                            posX = Math.max(0, Math.min(posX, maxW - w));
+                            posY = Math.max(0, Math.min(posY, maxH - h));
+                        }
+                        wrapper.style.left = `${posX}px`;
+                        wrapper.style.top = `${posY}px`;
+                        wrapper.style.width = `${w}px`;
+                        wrapper.style.height = `${h}px`;
+
+                        sigData.x = posX;
+                        sigData.y = posY;
+                        sigData.width = w;
+                        sigData.height = h;
+
                         wrapper.classList.remove('active-focus');
                         if (window.historyManager) window.historyManager.saveState();
                     }
@@ -611,6 +683,13 @@ window.signaturesModule = (() => {
             const zoom = window.viewportZoom || 1.0;
             posX = Math.max(20, ((scrollerRect.left + scroller.clientWidth / 2 - 70) - viewRect.left) / zoom);
             posY = Math.max(20, ((scrollerRect.top + scroller.clientHeight / 2 - 30) - viewRect.top) / zoom);
+        }
+
+        if (overlay) {
+            const maxW = overlay.clientWidth;
+            const maxH = overlay.clientHeight;
+            posX = Math.max(0, Math.min(posX, maxW - 140));
+            posY = Math.max(0, Math.min(posY, maxH - 60));
         }
 
         const stampId = `sig_stamp_${Date.now()}`;
