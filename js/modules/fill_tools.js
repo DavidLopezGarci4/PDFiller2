@@ -472,6 +472,7 @@ window.fillToolsModule = (() => {
             })
             .resizable({
                 edges: { left: true, right: true, bottom: true, top: true },
+                margin: 12,
                 listeners: {
                     start(event) {
                         const isRellenar = document.body.classList.contains('fill-mode-active');

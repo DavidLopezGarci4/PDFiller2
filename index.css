@@ -1043,7 +1043,7 @@ input:checked + .slider:before {
 
 /* Asegurar que las firmas tengan border discontinuo fino al pasar el mouse en edit mode */
 body.edit-mode-active .corrector-patch {
-    outline: 1.5px dashed rgba(59, 130, 246, 0.4);
+    outline: none;
     outline-offset: 2px;
     transition: outline 0.2s ease;
 }
