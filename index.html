@@ -416,6 +416,56 @@
             </div>
         </div>
 
+        <!-- DIÁLOGO OPCIONES DE EXPORTACIÓN -->
+        <div id="export-options-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 440px; padding: 20px;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0; font-family: 'Outfit', sans-serif;"><i class="fa-solid fa-file-export" style="color: var(--accent);"></i> Exportar Documento</h2>
+                    <button class="modal-close" id="btn-close-export-modal" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px; padding: 0;">
+                    <!-- Opción 1: Estándar -->
+                    <div class="export-option-card" id="opt-export-vector" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.2s ease;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 18px; color: #ef4444; background: rgba(239, 68, 68, 0.1); width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div>
+                                <h4 style="margin: 0 0 2px 0; font-size: 12px; font-weight: 600; color: #fff;">PDF Estándar</h4>
+                                <p style="margin: 0; font-size: 10px; color: var(--text-secondary);">Texto vectorial editable e interactivo.</p>
+                            </div>
+                        </div>
+                        <span class="export-badge" style="background: rgba(255,255,255,0.08); color: var(--text-secondary); padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 600; text-transform: uppercase;">Original</span>
+                    </div>
+                    
+                    <!-- Opción 2: Aplanado -->
+                    <div class="export-option-card" id="opt-export-flat" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.2s ease;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 18px; color: #10b981; background: rgba(16, 185, 129, 0.1); width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div>
+                                <h4 style="margin: 0 0 2px 0; font-size: 12px; font-weight: 600; color: #fff;">PDF Aplanado Seguro</h4>
+                                <p style="margin: 0; font-size: 10px; color: var(--text-secondary);">Aplanado en imagen. Destruye datos ocultos.</p>
+                            </div>
+                        </div>
+                        <span class="export-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 600; text-transform: uppercase;">Seguro IA</span>
+                    </div>
+                    
+                    <!-- Opción 3: TXT / Markdown -->
+                    <div class="export-option-card" id="opt-export-text" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: all 0.2s ease;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 18px; color: #3b82f6; background: rgba(59, 130, 246, 0.1); width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><i class="fa-solid fa-file-lines"></i></div>
+                            <div>
+                                <h4 style="margin: 0 0 2px 0; font-size: 12px; font-weight: 600; color: #fff;">Texto / Markdown</h4>
+                                <p style="margin: 0; font-size: 10px; color: var(--text-secondary);">Exporta transcripción limpia para prompts.</p>
+                            </div>
+                        </div>
+                        <span class="export-badge" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 600; text-transform: uppercase;">Prompts</span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: flex-end;">
+                    <button id="btn-close-export-dialog" class="btn btn-secondary" style="padding: 6px 16px; font-size: 11px; border-radius: 6px;">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
 
 
     </div>

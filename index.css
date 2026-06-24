@@ -1664,3 +1664,20 @@ body:not(.edit-mode-active) #conflict-banner {
     pointer-events: none !important;
     transform: translateX(-50%) scale(0.6) !important;
 }
+
+/* ==========================================================================
+   ESTILOS PREMIUM DE TARJETAS DE EXPORTACIÓN (MODAL)
+   ========================================================================== */
+.export-option-card {
+    transition: all 0.2s ease-in-out !important;
+}
+.export-option-card:hover {
+    background-color: rgba(99, 102, 241, 0.06) !important;
+    border-color: rgba(99, 102, 241, 0.35) !important;
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.export-option-card:active {
+    transform: translateY(0);
+    background-color: rgba(99, 102, 241, 0.1) !important;
+}

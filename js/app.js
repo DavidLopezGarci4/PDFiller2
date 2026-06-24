@@ -802,6 +802,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Elementos del Modal de Exportación
+    const exportModal = document.getElementById('export-options-modal');
+    const optExportVector = document.getElementById('opt-export-vector');
+    const optExportFlat = document.getElementById('opt-export-flat');
+    const optExportText = document.getElementById('opt-export-text');
+    const btnCloseExportModal = document.getElementById('btn-close-export-modal');
+    const btnCloseExportDialog = document.getElementById('btn-close-export-dialog');
+
+    const closeExportOptions = () => {
+        if (exportModal) exportModal.classList.remove('active');
+    };
+
+    if (btnCloseExportModal) btnCloseExportModal.addEventListener('click', closeExportOptions);
+    if (btnCloseExportDialog) btnCloseExportDialog.addEventListener('click', closeExportOptions);
+
     btnSavePdf.addEventListener('click', () => {
         if (!window.pdfBytes) return;
         
@@ -810,13 +825,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         window.pendingExportFilename = filename;
 
-        // Ejecutar validación de solapamientos
-        if (window.editorModule && window.editorModule.hasCollisions()) {
-            window.exportModule.showWarningBanner();
-        } else {
-            window.exportModule.exportModifiedPdf(filename);
+        // Abrir el modal de opciones de exportación
+        if (exportModal) {
+            exportModal.classList.add('active');
         }
     });
+
+    if (optExportVector) {
+        optExportVector.addEventListener('click', () => {
+            closeExportOptions();
+            const filename = window.pendingExportFilename || 'documento_editado.pdf';
+            if (window.editorModule && window.editorModule.hasCollisions()) {
+                window.exportModule.showWarningBanner();
+            } else {
+                window.exportModule.exportModifiedPdf(filename);
+            }
+        });
+    }
+
+    if (optExportFlat) {
+        optExportFlat.addEventListener('click', () => {
+            closeExportOptions();
+            const filename = window.pendingExportFilename || 'documento_editado.pdf';
+            window.exportModule.exportFlattenedPdf(filename);
+        });
+    }
+
+    if (optExportText) {
+        optExportText.addEventListener('click', () => {
+            closeExportOptions();
+            const filename = window.pendingExportFilename || 'documento_editado.pdf';
+            window.exportModule.exportMarkdownText(filename);
+        });
+    }
 
     // Deseleccionar todo al pulsar en áreas vacías del PDF overlay
     const overlayEl = document.getElementById('pdf-overlay');
