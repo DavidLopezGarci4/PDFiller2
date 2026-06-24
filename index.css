@@ -1042,14 +1042,14 @@ input:checked + .slider:before {
 }
 
 /* Asegurar que las firmas tengan border discontinuo fino al pasar el mouse en edit mode */
-body.edit-mode-active .corrector-patch {
+.corrector-patch {
     outline: none;
     outline-offset: 2px;
     transition: outline 0.2s ease;
 }
 
-body.edit-mode-active .corrector-patch:hover,
-body.edit-mode-active .corrector-patch.active-focus {
+.corrector-patch:hover,
+.corrector-patch.active-focus {
     outline: 1.5px dashed var(--accent) !important;
     outline-offset: 2px;
 }
